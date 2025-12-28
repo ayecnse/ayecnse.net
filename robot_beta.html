@@ -1,1 +1,760 @@
-This is AyeCNSe robot beta test site
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Differential Drive Robot Simulator</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f5f5f5;
+      color: #333;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+
+    header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 30px;
+      text-align: center;
+    }
+
+    header h1 {
+      font-size: 2em;
+      margin-bottom: 10px;
+    }
+
+    header p {
+      opacity: 0.9;
+    }
+
+    .section {
+      padding: 30px;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    .section:last-child {
+      border-bottom: none;
+    }
+
+    .section h2 {
+      margin-bottom: 20px;
+      color: #667eea;
+    }
+
+    .control-group {
+      margin-bottom: 20px;
+    }
+
+    .control-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+
+    .control-group input[type="text"] {
+      width: 100%;
+      padding: 10px;
+      border: 2px solid #e0e0e0;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+
+    .control-group input[type="text"]:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 4px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    button.primary {
+      background: #667eea;
+      color: white;
+    }
+
+    button.primary:hover {
+      background: #5568d3;
+    }
+
+    button.secondary {
+      background: #e0e0e0;
+      color: #333;
+    }
+
+    button.secondary:hover {
+      background: #d0d0d0;
+    }
+
+    button.danger {
+      background: #f44336;
+      color: white;
+    }
+
+    button.danger:hover {
+      background: #da190b;
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .status-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .status-item {
+      background: #f9f9f9;
+      padding: 15px;
+      border-radius: 4px;
+      border-left: 4px solid #667eea;
+    }
+
+    .status-item .label {
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 5px;
+    }
+
+    .status-item .value {
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .status-item.connected {
+      border-left-color: #4caf50;
+    }
+
+    .status-item.error {
+      border-left-color: #f44336;
+    }
+
+    canvas {
+      display: block;
+      margin: 0 auto;
+      border: 2px solid #e0e0e0;
+      border-radius: 4px;
+      background: #fafafa;
+    }
+
+    .code-container {
+      background: #282c34;
+      color: #abb2bf;
+      padding: 20px;
+      border-radius: 4px;
+      overflow-x: auto;
+      margin-bottom: 20px;
+      max-height: 500px;
+      overflow-y: auto;
+    }
+
+    .code-container pre {
+      margin: 0;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .explanation {
+      background: #e3f2fd;
+      padding: 20px;
+      border-radius: 4px;
+      border-left: 4px solid #2196f3;
+      margin-bottom: 20px;
+    }
+
+    .explanation h3 {
+      margin-bottom: 15px;
+      color: #1976d2;
+    }
+
+    .explanation p {
+      margin-bottom: 10px;
+      line-height: 1.6;
+    }
+
+    .explanation ul {
+      margin-left: 20px;
+      margin-bottom: 10px;
+    }
+
+    .explanation li {
+      margin-bottom: 5px;
+      line-height: 1.6;
+    }
+
+    .collapsible {
+      cursor: pointer;
+      user-select: none;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .collapsible::before {
+      content: '▼';
+      transition: transform 0.3s;
+    }
+
+    .collapsible.collapsed::before {
+      transform: rotate(-90deg);
+    }
+
+    .collapsible-content {
+      max-height: 1000px;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+
+    .collapsible-content.hidden {
+      max-height: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Differential Drive Robot Simulator</h1>
+      <p>Browser-based simulation and Arduino firmware distribution</p>
+    </header>
+
+    <div class="section">
+      <h2>Simulation Controls</h2>
+      
+      <div class="control-group">
+        <label for="csvUrl">Google Sheets CSV URL:</label>
+        <input type="text" id="csvUrl" placeholder="https://docs.google.com/spreadsheets/d/e/...">
+      </div>
+
+      <div class="button-group">
+        <button class="primary" id="connectBtn">Connect</button>
+        <button class="danger" id="disconnectBtn" disabled>Disconnect</button>
+        <button class="secondary" id="resetBtn">Reset Simulation</button>
+      </div>
+
+      <div class="status-grid">
+        <div class="status-item" id="connectionStatus">
+          <div class="label">Connection</div>
+          <div class="value">Disconnected</div>
+        </div>
+        <div class="status-item">
+          <div class="label">Sequence ID</div>
+          <div class="value" id="sequenceId">-</div>
+        </div>
+        <div class="status-item">
+          <div class="label">Current Command</div>
+          <div class="value" id="currentCommand">-</div>
+        </div>
+        <div class="status-item">
+          <div class="label">Robot State</div>
+          <div class="value" id="robotState">Idle</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Robot Visualization</h2>
+      <canvas id="robotCanvas" width="800" height="600"></canvas>
+    </div>
+
+    <div class="section">
+      <h2 class="collapsible" id="explanationToggle">How It Works</h2>
+      <div class="collapsible-content" id="explanationContent">
+        <div class="explanation">
+          <h3>Using Google Sheets to Control a Robot</h3>
+          <p>This system demonstrates how you can use Google Sheets as a simple way to share commands over the Internet:</p>
+          
+          <ul>
+            <li><strong>Google Sheets as a Command Center:</strong> You can create a spreadsheet with robot commands and publish it to the web. This makes it accessible to both the simulation and the real Arduino robot.</li>
+            
+            <li><strong>"Publish as CSV":</strong> CSV (Comma-Separated Values) is a simple text format that's easy for programs to read. When you publish a Google Sheet as CSV, it becomes a URL that returns the spreadsheet data as plain text.</li>
+            
+            <li><strong>The Random Number (Sequence ID):</strong> The first row contains a random number that changes each time you want to send new commands. Both the simulator and the real robot remember the last sequence number they saw. If the number hasn't changed, they ignore the data—this prevents commands from being executed repeatedly.</li>
+            
+            <li><strong>Command Format:</strong> Each command is on its own line: COMMAND,DURATION,SPEED. For example, "F,1000,200" means "go Forward for 1000 milliseconds at speed 200".</li>
+            
+            <li><strong>Identical Behavior:</strong> The simulation on this page follows the exact same logic as the Arduino code below. What you see in the browser is what the real robot will do.</li>
+          </ul>
+
+          <p><strong>Valid Commands:</strong></p>
+          <ul>
+            <li>F - Forward (both wheels forward)</li>
+            <li>B - Backward (both wheels backward)</li>
+            <li>L - Left (rotate left in place)</li>
+            <li>R - Right (rotate right in place)</li>
+            <li>S - Stop (immediate stop, no duration/speed needed)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Arduino Firmware</h2>
+      <p style="margin-bottom: 20px;">Download this sketch and upload it to your Arduino with an Adafruit Motor Shield V1.</p>
+      
+      <button class="primary" id="downloadBtn">Download robot_controller.ino</button>
+      
+      <div class="code-container" style="margin-top: 20px;">
+        <pre id="arduinoCode">/*
+ * Simple Differential Drive Robot Controller (V1)
+ *
+ * Copyright (C) 2025 Abhishek Choudhary
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; version 2
+ * of the License.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
+ *
+ * Author: Abhishek Choudhary
+ * License: GPL v2
+ * Protocol Version: V1
+ *
+ * Hardware:
+ *  - Arduino Uno / Nano
+ *  - Adafruit Motor Shield V1
+ *  - Motor 1: Left wheel
+ *  - Motor 2: Right wheel
+ */
+
+#include &lt;AFMotor.h&gt;
+
+AF_DCMotor motorLeft(1);   // Motor 1 on AF Motor Shield
+AF_DCMotor motorRight(2);  // Motor 2 on AF Motor Shield
+
+void setup() {
+  Serial.begin(9600);
+
+  motorLeft.setSpeed(0);
+  motorRight.setSpeed(0);
+
+  motorLeft.run(RELEASE);
+  motorRight.run(RELEASE);
+}
+
+void loop() {
+  if (Serial.available()) {
+    String line = Serial.readStringUntil('\n');
+    line.trim();
+
+    if (line.length() == 0) return;
+
+    if (line == "S") {
+      stopMotors();
+      return;
+    }
+
+    char cmd;
+    int duration;
+    int speed;
+
+    int parsed = sscanf(line.c_str(), "%c,%d,%d", &cmd, &duration, &speed);
+    if (parsed != 3) return;
+
+    executeCommand(cmd, duration, speed);
+  }
+}
+
+void executeCommand(char cmd, int duration, int speed) {
+  speed = constrain(speed, 0, 255);
+
+  switch (cmd) {
+    case 'F': forward(speed); break;
+    case 'B': backward(speed); break;
+    case 'L': left(speed); break;
+    case 'R': right(speed); break;
+    default: stopMotors(); return;
+  }
+
+  delay(duration);
+  stopMotors();
+}
+
+void forward(int speed) {
+  motorLeft.setSpeed(speed);
+  motorRight.setSpeed(speed);
+  motorLeft.run(FORWARD);
+  motorRight.run(FORWARD);
+}
+
+void backward(int speed) {
+  motorLeft.setSpeed(speed);
+  motorRight.setSpeed(speed);
+  motorLeft.run(BACKWARD);
+  motorRight.run(BACKWARD);
+}
+
+void left(int speed) {
+  motorLeft.setSpeed(speed);
+  motorRight.setSpeed(speed);
+  motorLeft.run(BACKWARD);
+  motorRight.run(FORWARD);
+}
+
+void right(int speed) {
+  motorLeft.setSpeed(speed);
+  motorRight.setSpeed(speed);
+  motorLeft.run(FORWARD);
+  motorRight.run(BACKWARD);
+}
+
+void stopMotors() {
+  motorLeft.run(RELEASE);
+  motorRight.run(RELEASE);
+}</pre>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Robot simulation state
+    const robot = {
+      x: 400,
+      y: 300,
+      angle: 0,
+      width: 40,
+      height: 60,
+      trail: []
+    };
+
+    // Connection state
+    let connected = false;
+    let pollInterval = null;
+    let lastSequenceId = null;
+    let currentCommandIndex = 0;
+    let commandList = [];
+    let isExecuting = false;
+    let csvUrl = '';
+
+    // Canvas setup
+    const canvas = document.getElementById('robotCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // UI elements
+    const csvUrlInput = document.getElementById('csvUrl');
+    const connectBtn = document.getElementById('connectBtn');
+    const disconnectBtn = document.getElementById('disconnectBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const connectionStatus = document.getElementById('connectionStatus');
+    const sequenceIdDisplay = document.getElementById('sequenceId');
+    const currentCommandDisplay = document.getElementById('currentCommand');
+    const robotStateDisplay = document.getElementById('robotState');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const explanationToggle = document.getElementById('explanationToggle');
+    const explanationContent = document.getElementById('explanationContent');
+
+    // Collapsible explanation
+    explanationToggle.addEventListener('click', () => {
+      explanationToggle.classList.toggle('collapsed');
+      explanationContent.classList.toggle('hidden');
+    });
+
+    // Draw robot
+    function drawRobot() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Draw trail
+      ctx.strokeStyle = 'rgba(102, 126, 234, 0.3)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      robot.trail.forEach((point, index) => {
+        if (index === 0) {
+          ctx.moveTo(point.x, point.y);
+        } else {
+          ctx.lineTo(point.x, point.y);
+        }
+      });
+      ctx.stroke();
+
+      // Save context
+      ctx.save();
+      ctx.translate(robot.x, robot.y);
+      ctx.rotate(robot.angle);
+
+      // Draw chassis
+      ctx.fillStyle = '#667eea';
+      ctx.fillRect(-robot.width / 2, -robot.height / 2, robot.width, robot.height);
+
+      // Draw wheels
+      ctx.fillStyle = '#333';
+      ctx.fillRect(-robot.width / 2 - 5, -robot.height / 2 + 10, 5, 15); // Left wheel
+      ctx.fillRect(robot.width / 2, -robot.height / 2 + 10, 5, 15); // Right wheel
+      ctx.fillRect(-robot.width / 2 - 5, robot.height / 2 - 25, 5, 15); // Left wheel back
+      ctx.fillRect(robot.width / 2, robot.height / 2 - 25, 5, 15); // Right wheel back
+
+      // Draw front indicator (arrow)
+      ctx.fillStyle = '#fff';
+      ctx.beginPath();
+      ctx.moveTo(0, -robot.height / 2 + 5);
+      ctx.lineTo(-8, -robot.height / 2 + 15);
+      ctx.lineTo(8, -robot.height / 2 + 15);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.restore();
+    }
+
+    // Move robot
+    function moveRobot(command, duration, speed) {
+      const startTime = Date.now();
+      const normalizedSpeed = speed / 255;
+      const pixelsPerMs = normalizedSpeed * 0.2; // Adjust for visual speed
+      const rotationPerMs = normalizedSpeed * 0.003; // Adjust for rotation speed
+
+      function animate() {
+        const elapsed = Date.now() - startTime;
+        
+        if (elapsed >= duration) {
+          isExecuting = false;
+          executeNextCommand();
+          return;
+        }
+
+        const dt = 16; // ~60fps
+
+        switch (command) {
+          case 'F':
+            robot.x += Math.sin(robot.angle) * pixelsPerMs * dt;
+            robot.y -= Math.cos(robot.angle) * pixelsPerMs * dt;
+            break;
+          case 'B':
+            robot.x -= Math.sin(robot.angle) * pixelsPerMs * dt;
+            robot.y += Math.cos(robot.angle) * pixelsPerMs * dt;
+            break;
+          case 'L':
+            robot.angle -= rotationPerMs * dt;
+            break;
+          case 'R':
+            robot.angle += rotationPerMs * dt;
+            break;
+        }
+
+        // Keep robot on canvas
+        robot.x = Math.max(50, Math.min(canvas.width - 50, robot.x));
+        robot.y = Math.max(50, Math.min(canvas.height - 50, robot.y));
+
+        // Add to trail
+        if (robot.trail.length === 0 || 
+            Math.hypot(robot.x - robot.trail[robot.trail.length - 1].x, 
+                      robot.y - robot.trail[robot.trail.length - 1].y) > 5) {
+          robot.trail.push({ x: robot.x, y: robot.y });
+          if (robot.trail.length > 500) {
+            robot.trail.shift();
+          }
+        }
+
+        drawRobot();
+        requestAnimationFrame(animate);
+      }
+
+      isExecuting = true;
+      animate();
+    }
+
+    // Execute next command
+    function executeNextCommand() {
+      if (currentCommandIndex >= commandList.length) {
+        robotStateDisplay.textContent = 'Idle';
+        currentCommandDisplay.textContent = '-';
+        currentCommandIndex = 0;
+        return;
+      }
+
+      const cmd = commandList[currentCommandIndex];
+      currentCommandIndex++;
+
+      if (cmd.command === 'S') {
+        robotStateDisplay.textContent = 'Stopped';
+        currentCommandDisplay.textContent = 'S (Stop)';
+        currentCommandIndex = 0;
+        return;
+      }
+
+      const cmdNames = { F: 'Forward', B: 'Backward', L: 'Left', R: 'Right' };
+      currentCommandDisplay.textContent = `${cmd.command} (${cmdNames[cmd.command]}) - ${cmd.duration}ms @ ${cmd.speed}`;
+      robotStateDisplay.textContent = 'Executing';
+
+      moveRobot(cmd.command, cmd.duration, cmd.speed);
+    }
+
+    // Parse CSV
+    function parseCSV(text) {
+      const lines = text.trim().split('\n').map(l => l.trim()).filter(l => l.length > 0);
+      
+      if (lines.length === 0) {
+        throw new Error('Empty CSV');
+      }
+
+      const sequenceId = lines[0];
+      const commands = [];
+
+      for (let i = 1; i < lines.length; i++) {
+        const line = lines[i];
+        
+        if (line === 'S') {
+          commands.push({ command: 'S', duration: 0, speed: 0 });
+          continue;
+        }
+
+        const parts = line.split(',').map(p => p.trim());
+        if (parts.length !== 3) continue;
+
+        const command = parts[0];
+        const duration = parseInt(parts[1]);
+        const speed = parseInt(parts[2]);
+
+        if (['F', 'B', 'L', 'R'].includes(command) && !isNaN(duration) && !isNaN(speed)) {
+          commands.push({ command, duration, speed: Math.max(0, Math.min(255, speed)) });
+        }
+      }
+
+      return { sequenceId, commands };
+    }
+
+    // Poll CSV
+    async function pollCSV() {
+      try {
+        const response = await fetch(csvUrl);
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+
+        const text = await response.text();
+        const { sequenceId, commands } = parseCSV(text);
+
+        if (sequenceId !== lastSequenceId) {
+          lastSequenceId = sequenceId;
+          sequenceIdDisplay.textContent = sequenceId;
+          
+          // Stop current execution
+          isExecuting = false;
+          currentCommandIndex = 0;
+          commandList = commands;
+          
+          // Start new sequence
+          if (commands.length > 0) {
+            executeNextCommand();
+          }
+        }
+
+        // Update status to connected
+        if (!connectionStatus.classList.contains('connected')) {
+          connectionStatus.classList.add('connected');
+          connectionStatus.classList.remove('error');
+          connectionStatus.querySelector('.value').textContent = 'Connected';
+        }
+
+      } catch (error) {
+        console.error('Poll error:', error);
+        connectionStatus.classList.add('error');
+        connectionStatus.classList.remove('connected');
+        connectionStatus.querySelector('.value').textContent = 'Error';
+        robotStateDisplay.textContent = 'Error';
+      }
+    }
+
+    // Connect
+    connectBtn.addEventListener('click', () => {
+      csvUrl = csvUrlInput.value.trim();
+      if (!csvUrl) {
+        alert('Please enter a CSV URL');
+        return;
+      }
+
+      connected = true;
+      connectBtn.disabled = true;
+      disconnectBtn.disabled = false;
+      csvUrlInput.disabled = true;
+
+      pollInterval = setInterval(pollCSV, 500);
+      pollCSV(); // Initial poll
+    });
+
+    // Disconnect
+    disconnectBtn.addEventListener('click', () => {
+      connected = false;
+      connectBtn.disabled = false;
+      disconnectBtn.disabled = true;
+      csvUrlInput.disabled = false;
+
+      if (pollInterval) {
+        clearInterval(pollInterval);
+        pollInterval = null;
+      }
+
+      connectionStatus.classList.remove('connected', 'error');
+      connectionStatus.querySelector('.value').textContent = 'Disconnected';
+      robotStateDisplay.textContent = 'Idle';
+      currentCommandDisplay.textContent = '-';
+      isExecuting = false;
+    });
+
+    // Reset
+    resetBtn.addEventListener('click', () => {
+      robot.x = 400;
+      robot.y = 300;
+      robot.angle = 0;
+      robot.trail = [];
+      lastSequenceId = null;
+      sequenceIdDisplay.textContent = '-';
+      drawRobot();
+    });
+
+    // Download Arduino code
+    downloadBtn.addEventListener('click', () => {
+      const code = document.getElementById('arduinoCode').textContent;
+      const blob = new Blob([code], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'robot_controller.ino';
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    // Initial draw
+    drawRobot();
+  </script>
+</body>
+</html>
