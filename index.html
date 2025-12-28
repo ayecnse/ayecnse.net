@@ -42,12 +42,13 @@ html,body {
 .small { font-size:0.9em; color:#aaa; }
 </style>
 <script>
-setTimeout(function() {
-  if (location.hostname !== "ayecnse.net") {
-    location.href = "https://ayecnse.net/robot_beta.html";
+setTimeout(() => {
+  if (!location.pathname.endsWith("robot_beta.html")) {
+    location.href = "/robot_beta.html";
   }
 }, 3500);
 </script>
+
 </head>
 <body>
 <div class="center">
